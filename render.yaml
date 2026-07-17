@@ -1,0 +1,91 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: in the Render dashboard, "New +" -> "Blueprint", point it at this
+# repo. Render provisions the database and both services below in one pass.
+#
+# Manual steps Render can't automate from this file alone — do these once,
+# right after the first deploy:
+#
+#   1. Verify pgvector is available on the DB: open a Shell/psql session
+#      against petmatcher-db and run `CREATE EXTENSION IF NOT EXISTS vector;`.
+#      If it fails, the Postgres plan may need upgrading — extension support
+#      has changed across Render's tiers, so check Render's current docs.
+#
+#   2. Fix DB_URL's driver scheme: Render's `fromDatabase` connection string
+#      is `postgresql://...`, but this app's async SQLAlchemy engine needs
+#      `postgresql+asyncpg://...`. After the first deploy, edit the
+#      petmatcher-api service's DB_URL env var in the dashboard and insert
+#      `+asyncpg` right after `postgresql`. Redeploy after changing it.
+#
+#   3. Confirm the two service URLs match what CORS_ORIGINS / API_PROXY_TARGET
+#      below assume (https://petmatcher-api.onrender.com and
+#      https://petmatcher-frontend.onrender.com) — Render names services
+#      this way by default, but if you renamed them, or a name was already
+#      taken and Render appended a suffix, update both env vars to match.
+#
+#   4. Run the migration: Shell into petmatcher-api and run
+#      `alembic upgrade head` — or configure it as a Render "Pre-Deploy
+#      Command" on the service so it runs automatically on every deploy.
+#
+#   5. Seed demo data: Shell into petmatcher-api and follow "Seeding a live
+#      deploy" in the README (downloads the dataset directly into the
+#      container, since the git-based deploy doesn't include it, then runs
+#      scripts/seed.py --limit 200).
+
+databases:
+  - name: petmatcher-db
+    databaseName: petmatcher
+    user: petmatcher
+    plan: starter
+    postgresMajorVersion: 16
+
+services:
+  - type: web
+    name: petmatcher-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_URL
+        fromDatabase:
+          name: petmatcher-db
+          property: connectionString
+      - key: IMAGE_STORAGE_PATH
+        value: /data/images
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: https://petmatcher-frontend.onrender.com
+      - key: MATCH_RADIUS_KM
+        value: "25"
+      - key: MATCH_DATE_WINDOW_DAYS
+        value: "45"
+      - key: MATCH_W_VISUAL
+        value: "0.6"
+      - key: MATCH_W_DISTANCE
+        value: "0.25"
+      - key: MATCH_W_RECENCY
+        value: "0.15"
+      - key: MATCH_LIMIT
+        value: "20"
+    disk:
+      # One disk covers both /data/images and /data/hf-cache (the CLIP
+      # weight cache, see backend/Dockerfile's HF_HOME) — Render web services
+      # only support a single attached persistent disk each, so both live
+      # under the same mount instead of two separate disks.
+      name: petmatcher-data
+      mountPath: /data
+      sizeGB: 2
+
+  - type: web
+    name: petmatcher-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile.prod
+    dockerContext: ./frontend
+    plan: starter
+    envVars:
+      - key: API_PROXY_TARGET
+        value: https://petmatcher-api.onrender.com

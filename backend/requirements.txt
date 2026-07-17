@@ -1,0 +1,23 @@
+# Web framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Database
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pgvector
+
+# Config
+pydantic-settings
+
+# Embeddings (CPU-only torch; see Dockerfile for the CPU wheel index)
+torch
+open_clip_torch
+pillow
+
+# Testing
+pytest
+httpx
+pytest-asyncio

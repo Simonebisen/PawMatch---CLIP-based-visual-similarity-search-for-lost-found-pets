@@ -1,0 +1,21 @@
+# Production build: static assets served by nginx, which also reverse-proxies
+# /api/* to the backend so the browser only ever talks to one origin (no CORS
+# needed in prod). See docker-compose.prod.yml and nginx.conf.template.
+
+FROM node:22-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+# nginx's official image envsubst's any /etc/nginx/templates/*.template file
+# into /etc/nginx/conf.d/ at container startup, substituting only variables
+# that are actually set in the environment — nginx's own $uri/$host/etc.
+# built-ins are untouched since they aren't real env vars.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+ENV API_PROXY_TARGET=http://api:8000
+
+EXPOSE 80

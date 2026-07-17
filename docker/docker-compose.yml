@@ -1,0 +1,74 @@
+# Run from the repo root:
+#   docker compose -f docker/docker-compose.yml up --build
+#
+# Variable substitution (${...}) reads a `.env` file in the directory you run
+# the command from (the repo root). Copy `.env.example` to `.env` first, or rely
+# on the :- defaults below.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-petmatcher}
+      POSTGRES_USER: ${POSTGRES_USER:-petmatcher}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petmatcher}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-petmatcher} -d ${POSTGRES_DB:-petmatcher}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: ${DB_URL:-postgresql+asyncpg://petmatcher:petmatcher@postgres:5432/petmatcher}
+      IMAGE_STORAGE_PATH: ${IMAGE_STORAGE_PATH:-/data/images}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "8000:8000"
+    volumes:
+      # Live-reload: bind-mount the source over the image's /app.
+      - ../backend:/app
+      # Named volume for stored images (keeps them off the bind mount).
+      - images:/data/images
+      # CLIP weight cache (see Dockerfile's HF_HOME) — without this, every
+      # fresh container re-downloads ~350MB of weights on first request.
+      - clip_cache:/data/hf-cache
+      # Utility/dev scripts (e.g. scripts/seed.py), runnable via `docker compose exec api python scripts/seed.py`.
+      - ../scripts:/app/scripts
+      # Read-only source dataset for seeding demo data (see README "Seeding demo data").
+      - ../data:/data/source:ro
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    environment:
+      # Vite dev server proxy target (see vite.config.ts) — the api service's
+      # name on the compose network, not localhost.
+      VITE_API_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      # Live-reload: bind-mount the source over the image's /app.
+      - ../frontend:/app
+      # Anonymous volume so the bind mount above doesn't shadow the
+      # container's own (Linux-built) node_modules with the host's.
+      - /app/node_modules
+
+volumes:
+  pgdata:
+  images:
+  clip_cache:

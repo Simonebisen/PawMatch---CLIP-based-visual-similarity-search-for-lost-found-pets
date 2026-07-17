@@ -1,0 +1,74 @@
+# Local verification of the production build. This is NOT what Render
+# deploys from directly (Render builds each service from its own Dockerfile
+# via render.yaml) — running this locally proves the prod images actually
+# work end-to-end before trusting them to a real deploy.
+#
+# Run from the repo root:
+#   docker compose -f docker/docker-compose.prod.yml up --build
+#
+# Credentials below are local-only test defaults, not real secrets — Render
+# deployments get their DB_URL/CORS_ORIGINS/etc. from its dashboard env vars,
+# never from this file.
+
+# Explicit project name: without this, Compose infers the name from the
+# directory (`docker/`) — the same directory the dev compose file lives in —
+# so both would collide on container/network names if run at the same time.
+name: petmatcher-prod
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-petmatcher}
+      POSTGRES_USER: ${POSTGRES_USER:-petmatcher}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petmatcher}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-petmatcher} -d ${POSTGRES_DB:-petmatcher}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # Same image as dev, but without --reload (dev's CMD includes it).
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: ${DB_URL:-postgresql+asyncpg://petmatcher:petmatcher@postgres:5432/petmatcher}
+      IMAGE_STORAGE_PATH: /data/images
+      ENVIRONMENT: production
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+    ports:
+      # Host port 8001, not 8000 — avoids colliding with the dev stack's api
+      # service if both happen to be running at once. Only exposed for local
+      # debugging; the frontend reaches the api via the Docker network
+      # (api:8000) regardless of this mapping.
+      - "8001:8000"
+    volumes:
+      - images_prod:/data/images
+      - clip_cache_prod:/data/hf-cache
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+    depends_on:
+      - api
+    environment:
+      # nginx.conf.template's proxy target — the api service's name on the
+      # compose network, matching how the dev Vite proxy is configured.
+      API_PROXY_TARGET: http://api:8000
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata_prod:
+  images_prod:
+  clip_cache_prod:
