@@ -15,7 +15,7 @@ Render" below)._
 |---|---|
 | ![Landing page](docs/screenshots/landing.png) | ![Report form with map picker](docs/screenshots/report-form.png) |
 | Landing page | Report form — click-to-pick location on the map |
-| ![Results page with ranked matches](docs/screenshots/results.jpg) | ![Browse page with filters](docs/screenshots/browse.jpg) |
+| ![Results page with ranked matches](docs/screenshots/results.jpg) |
 | Results — map + ranked candidate grid | Browse — filter by type/species/location |
 
 ## Architecture
