@@ -218,9 +218,11 @@ frontend) in one pass.
 3. **Manual steps `render.yaml` can't automate** (also documented as comments in the file
    itself):
    - **Enable pgvector**: open a Shell against `petmatcher-db` and run
-     `CREATE EXTENSION IF NOT EXISTS vector;`. If it fails, the Postgres plan may need
-     upgrading — extension availability has changed across Render's tiers, so check
-     Render's current docs if `starter` doesn't have it.
+     `CREATE EXTENSION IF NOT EXISTS vector;`. Render retired the legacy
+     starter/standard/pro Postgres plans for new databases — `render.yaml` uses
+     `basic-256mb` (the cheapest plan that doesn't expire; the free plan
+     auto-deletes after 30 days). pgvector works on any current plan, no tier
+     restriction, but check Render's docs if this ever changes.
    - **Fix the DB driver scheme**: Render's `fromDatabase` connection string is
      `postgresql://...`; this app's async SQLAlchemy engine needs
      `postgresql+asyncpg://...`. Edit `petmatcher-api`'s `DB_URL` env var in the dashboard

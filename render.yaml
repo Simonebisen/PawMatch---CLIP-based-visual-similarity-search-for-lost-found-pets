@@ -36,7 +36,13 @@ databases:
   - name: petmatcher-db
     databaseName: petmatcher
     user: petmatcher
-    plan: starter
+    # Render retired the legacy starter/standard/pro Postgres plans for new
+    # databases in favor of these "flexible" instance types. basic-256mb is
+    # the cheapest one that doesn't expire — the free plan auto-deletes
+    # after 30 days, which defeats the point of a portfolio demo staying up.
+    # pgvector works on any of these (all Postgres 13+ databases support it,
+    # no plan restriction) — see the extension check in step 1 below either way.
+    plan: basic-256mb
     postgresMajorVersion: 16
 
 services:
