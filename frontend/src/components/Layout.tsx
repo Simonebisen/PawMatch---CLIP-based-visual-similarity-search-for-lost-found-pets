@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import Logo from './ui/Logo'
 
 export default function Layout() {
   return (
@@ -17,7 +18,8 @@ function Header() {
   return (
     <header className="border-b border-stone-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-        <Link to="/" className="text-lg font-bold tracking-tight text-stone-900">
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-stone-900">
+          <Logo />
           Lost &amp; Found <span className="text-amber-600">Pet Matcher</span>
         </Link>
         <nav className="flex items-center gap-1 text-sm font-medium">
