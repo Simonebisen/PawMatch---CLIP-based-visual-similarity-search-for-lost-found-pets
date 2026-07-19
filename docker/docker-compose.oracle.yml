@@ -25,3 +25,7 @@ services:
     # on this host so scripts/seed.py can use its default --dataset-dir.
     volumes:
       - ../data:/data/source:ro
+      # scripts/seed.py isn't baked into the prod image (the Dockerfile's
+      # build context is backend/ only) and prod doesn't bind-mount it like
+      # dev does — mount it here so `exec api python scripts/seed.py` works.
+      - ../scripts:/app/scripts
