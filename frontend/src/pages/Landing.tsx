@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import heroDog from '../assets/hero-dog.jpg'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import LinkButton from '../components/ui/LinkButton'
@@ -48,18 +49,26 @@ export default function Landing() {
         </div>
       )}
 
-      <section className="bg-stone-900 text-white">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-24 text-center">
+      <section className="relative overflow-hidden bg-stone-900 text-white">
+        {/* Background photo, heavily darkened + blurred — stays a "black" section, just with warmth behind it. */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-25 blur-sm"
+          style={{ backgroundImage: `url(${heroDog})` }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-900/90 via-stone-900/85 to-stone-900" />
+
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-24 text-center">
           <span className="rounded-full bg-white/10 px-4 py-1 text-sm font-medium text-amber-300">
             Photo-matching for lost & found pets
           </span>
           <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
             Reunite lost pets with their families, faster.
           </h1>
-          <p className="max-w-xl text-lg text-stone-300">
-            Upload a photo of a lost or found pet. We compare it against every other report using
-            computer vision, location, and timing to surface the most likely matches.
-          </p>
+          <blockquote className="max-w-xl text-lg text-stone-200 italic">
+            "Somewhere out there, a family is hoping for good news. Let's help you bring it to
+            them."
+          </blockquote>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <LinkButton to="/report/lost" variant="danger" size="lg">
               Report a Lost Pet
