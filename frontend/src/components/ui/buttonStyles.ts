@@ -1,4 +1,4 @@
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'outline'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const base =
@@ -10,6 +10,9 @@ const variants: Record<ButtonVariant, string> = {
   ghost: 'text-stone-700 hover:bg-stone-100 focus:ring-stone-400',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+  // White text/border, transparent background — for use on dark surfaces
+  // (e.g. LocationPicker's "Use my location" button on ReportForm's black bg).
+  outline: 'border border-stone-400 text-white hover:bg-white/10 focus:ring-stone-300',
 }
 
 const sizes: Record<ButtonSize, string> = {

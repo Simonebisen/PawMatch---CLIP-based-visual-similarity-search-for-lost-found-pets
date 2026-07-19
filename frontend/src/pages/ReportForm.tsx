@@ -180,7 +180,11 @@ function ReportFormInner({ reportType }: { reportType: ReportType }) {
           </FormField>
 
           <FormField label="Location" htmlFor="location-picker" error={errors.location} labelClassName="text-stone-200">
-            <LocationPicker value={form.location} onChange={(location) => updateField('location', location)} />
+            <LocationPicker
+              value={form.location}
+              onChange={(location) => updateField('location', location)}
+              theme="dark"
+            />
           </FormField>
 
           <FormField label="Date" htmlFor="event_date" error={errors.event_date} labelClassName="text-stone-200">
