@@ -1,12 +1,28 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Button from '../components/ui/Button'
 import LinkButton from '../components/ui/LinkButton'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function Landing() {
   useDocumentTitle('Home')
+  const [showWelcome, setShowWelcome] = useState(true)
 
   return (
     <div>
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xl">
+            <h2 className="mb-2 text-xl font-bold text-stone-900">Hello, welcome to PetMatcher!</h2>
+            <p className="mb-5 text-stone-600">
+              Report a lost or found pet with a photo and we'll help find the match.
+            </p>
+            <Button onClick={() => setShowWelcome(false)} className="w-full">
+              Got it
+            </Button>
+          </div>
+        </div>
+      )}
       <section className="bg-stone-900 text-white">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-24 text-center">
           <span className="rounded-full bg-white/10 px-4 py-1 text-sm font-medium text-amber-300">

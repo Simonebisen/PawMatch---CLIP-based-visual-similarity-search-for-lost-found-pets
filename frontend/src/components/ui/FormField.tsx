@@ -5,15 +5,17 @@ export default function FormField({
   htmlFor,
   error,
   children,
+  labelClassName = 'text-stone-700',
 }: {
   label: string
   htmlFor: string
   error?: string
   children: ReactNode
+  labelClassName?: string
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-stone-700">
+      <label htmlFor={htmlFor} className={`text-sm font-medium ${labelClassName}`}>
         {label}
       </label>
       {children}
