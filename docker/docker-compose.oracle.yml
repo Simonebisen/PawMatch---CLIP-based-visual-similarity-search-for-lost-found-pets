@@ -19,3 +19,9 @@ services:
     # here would NOT clear the base file's "8001:8000" mapping (verified —
     # it doesn't). !reset is Compose's explicit tag for "replace, don't merge".
     ports: !reset []
+    # Compose appends volume lists (unlike ports, this direction is what we
+    # want here) — this adds to images_prod/clip_cache_prod from the base
+    # file rather than replacing them. Mounts the dataset already downloaded
+    # on this host so scripts/seed.py can use its default --dataset-dir.
+    volumes:
+      - ../data:/data/source:ro
