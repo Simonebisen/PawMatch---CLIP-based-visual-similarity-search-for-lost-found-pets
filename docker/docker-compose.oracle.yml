@@ -1,0 +1,21 @@
+# Port override for deploying alongside other unrelated services on a shared
+# box (e.g. a borrowed Oracle Cloud VM). Layers on top of docker-compose.prod.yml
+# — doesn't replace it, just removes the api's host port exposure so it
+# doesn't fight another process already bound to that port on the host.
+#
+# Run from the repo root, on the server:
+#   docker compose -f docker/docker-compose.prod.yml -f docker/docker-compose.oracle.yml up -d --build
+#
+# The frontend still publishes host port 8080 (see docker-compose.prod.yml) —
+# check that's actually free on your box too before running this
+# (`sudo ss -tlnp | grep 8080`). The api needs no host port at all: only the
+# frontend container talks to it, over the Docker-internal network (api:8000).
+# For direct debugging use `docker compose exec api ...` or
+# `docker compose logs api`, not curl against a host port.
+
+services:
+  api:
+    # Compose appends port lists across -f files by default, so a plain `[]`
+    # here would NOT clear the base file's "8001:8000" mapping (verified —
+    # it doesn't). !reset is Compose's explicit tag for "replace, don't merge".
+    ports: !reset []
